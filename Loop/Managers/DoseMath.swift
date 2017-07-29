@@ -7,12 +7,13 @@
 //
 
 import Foundation
+import CarbKit
 import HealthKit
 import InsulinKit
 import LoopKit
 
 
-struct DoseMath {
+enum DoseMath {
     /// The allowed precision
     static let basalStrokes: Double = 40
 
@@ -31,7 +32,7 @@ struct DoseMath {
      - returns: The determined basal rate, in Units/hour
      */
     private static func calculateTempBasalRateForGlucose(_ currentGlucose: HKQuantity, toTargetGlucose targetGlucose: HKQuantity, insulinSensitivity: HKQuantity, currentBasalRate: Double, maxBasalRate: Double, duration: TimeInterval) -> Double {
-        let unit = HKUnit.milligramsPerDeciliterUnit()
+        let unit = HKUnit.milligramsPerDeciliter()
         let doseUnits = (currentGlucose.doubleValue(for: unit) - targetGlucose.doubleValue(for: unit)) / insulinSensitivity.doubleValue(for: unit)
 
         let rate = min(maxBasalRate, max(0, doseUnits / (duration / TimeInterval(hours: 1)) + currentBasalRate))
@@ -62,13 +63,15 @@ struct DoseMath {
         glucoseTargetRange: GlucoseRangeSchedule,
         insulinSensitivity: InsulinSensitivitySchedule,
         basalRateSchedule: BasalRateSchedule,
-        minimumBGGuard: GlucoseThreshold
+        minimumBGGuard: GlucoseThreshold,
+        insulinActionDuration: TimeInterval
     ) -> (rate: Double, duration: TimeInterval)? {
         guard glucose.count > 1 else {
             return nil
         }
 
-        let eventualGlucose = glucose.last!
+        let eventualGlucose = glucose.filter { $0.startDate <= date.addingTimeInterval(insulinActionDuration) }.last!
+        
         let minGlucose = glucose.min { $0.quantity < $1.quantity }!
 
         let eventualGlucoseTargets = glucoseTargetRange.value(at: eventualGlucose.startDate)
@@ -113,7 +116,7 @@ struct DoseMath {
         if let lastTempBasal = lastTempBasal, lastTempBasal.unit == .unitsPerHour && lastTempBasal.endDate > date {
             if let determinedRate = rate {
                 // Ignore the dose if the current dose is the same rate and has more than 10 minutes remaining
-                if determinedRate == lastTempBasal.value && lastTempBasal.endDate.timeIntervalSince(date) > TimeInterval(minutes: 11) {
+                if determinedRate == lastTempBasal.unitsPerHour && lastTempBasal.endDate.timeIntervalSince(date) > TimeInterval(minutes: 11) {
                     rate = nil
                 }
             } else {
@@ -151,13 +154,15 @@ struct DoseMath {
         insulinSensitivity: InsulinSensitivitySchedule,
         basalRateSchedule: BasalRateSchedule,
         pendingInsulin: Double,
-        minimumBGGuard: GlucoseThreshold
+        minimumBGGuard: GlucoseThreshold,
+        insulinActionDuration: TimeInterval
     ) -> BolusRecommendation {
         guard glucose.count > 1 else {
             return BolusRecommendation(amount: 0, pendingInsulin: pendingInsulin)
         }
 
-        let eventualGlucose = glucose.last!
+        let eventualGlucose = glucose.filter { $0.startDate <= date.addingTimeInterval(insulinActionDuration) }.last!
+
         let minGlucose = glucose.min { $0.quantity < $1.quantity }!
 
         let eventualGlucoseTargets = glucoseTargetRange.value(at: eventualGlucose.startDate)
