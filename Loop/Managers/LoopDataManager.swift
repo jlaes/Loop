@@ -70,7 +70,7 @@ final class LoopDataManager {
         // Novolog published curve fit: actionDuration = 360, peak = 75
         // Child rapid-acting: actionDuration = 300, peak = 60
         // Fiasp: actionDuration = 360, peak = 55
-        let insulinModel = ExponentialInsulinModel(actionDuration: TimeInterval(minutes: 360), peakActivityTime: TimeInterval(minutes: 75))
+        let insulinModel = ExponentialInsulinModel(actionDuration: TimeInterval(minutes: 360), peakActivityTime: TimeInterval(minutes: 55))
 
         doseStore = DoseStore(
             insulinModel: insulinModel,
@@ -147,7 +147,7 @@ final class LoopDataManager {
             return false
         }
 
-        _ = settings.glucoseTargetRangeSchedule!.setWorkoutOverride(until: endDate)
+        _ = settings.glucoseTargetRangeSchedule!.setOverride(_:from:until:)
 
         notify(forChange: .preferences)
 

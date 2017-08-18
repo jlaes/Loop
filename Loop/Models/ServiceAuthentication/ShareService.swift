@@ -52,14 +52,15 @@ class ShareService: ServiceAuthentication {
          https://github.com/dabear/NightscoutShareServer
          */
 
-        /*
-        let customServer = "https://REPLACEME"
-        let customServerTitle = "Custom"
+        
+        
+        let customServer = "https://nightscoutshareserver666b.azurewebsites.net"
+        let customServerTitle = "Valo'sShareBridge"
 
         credentials[2].options?.append(
                 (title: NSLocalizedString(customServerTitle, comment: "Custom share server option title"),
                 value: customServer))
-        */
+ 
 
         if let username = username, let password = password, let url = url {
             isAuthorized = true
