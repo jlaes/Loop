@@ -60,8 +60,8 @@ final class LoopDataManager {
         carbStore = CarbStore(
             defaultAbsorptionTimes: (
                 fast: TimeInterval(hours: 2),
-                medium: TimeInterval(hours: 3),
-                slow: TimeInterval(hours: 4)
+                medium: TimeInterval(hours: 5),
+                slow: TimeInterval(hours: 7)
             ),
             carbRatioSchedule: carbRatioSchedule,
             insulinSensitivitySchedule: insulinSensitivitySchedule
@@ -147,7 +147,7 @@ final class LoopDataManager {
             return false
         }
 
-        _ = settings.glucoseTargetRangeSchedule!.setOverride(_:from:until:)
+        _ = settings.glucoseTargetRangeSchedule!.setWorkoutOverride(until: endDate)
 
         notify(forChange: .preferences)
 
